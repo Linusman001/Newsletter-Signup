@@ -1,24 +1,19 @@
-const express = require("express");
-const app = express();
-const bodyParser = require("body-parser");
-const https = require('https');
+const express = require('express')
+const bodyParser = require('body-parser')
+const https = require('https')
+const app = express()
+app.use(express.static('public'))
+app.use(bodyParser.urlencoded({extended: true}))
 
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
-
-app.use(express.static("public"));
-
-app.get("/", function (req, res) {
+app.get('/', (req, res)=>{
     res.sendFile(`${__dirname}/signup.html`)
-});
+})
 
-app.post("/", function (req, res) {
-    const firstName = req.body.fName
+app.post('/', (req, res)=>{
+    const firstName = req.body.firstName
     const lastName = req.body.lastName
     const email = req.body.email
 
-    // Batch subscribe/unsubscribe data
     const data = {
         members: [{
             email_address: email,
@@ -30,59 +25,55 @@ app.post("/", function (req, res) {
         }]
     }
 
-    const jsonData = JSON.stringify(data);
+    const jsonData = JSON.stringify(data)
 
-    // Mailchimp API key and list ID
-    const apiKey = '7e7bb1d9eec9757b863f3b5a9dbed8a6-us21';
-    const listId = 'f364c63968';
-
-    const url = `https://us21.api.mailchimp.com/3.0/lists/${listId}/`;
-
-    // Set request options
+    const url = 'https://us21.api.mailchimp.com/3.0/lists/f364c63968'
     const options = {
         method: 'POST',
-        auth: `Linusman001:${apiKey}`
+        auth: "Linusman:b64390cec8084533d39ce3a5cc860f4d-us21"
     }
 
-    const request = https.request(url, options, function (response) {
+    const request = https.request(url, options, (response)=>{
+        let responseData = ''
+        
+        // response.on('data', (d)=> {
+        //     process.stdout.write(d)
+        // })
 
-        if (response.statusCode === 200) {
+        response.on('data', (data)=>{
+            responseData += data
+        })
+
+        response.on('end', ()=>{
+            console.log(JSON.parse(responseData))
+        })
+
+        if (response.statusCode == 200) {
             res.sendFile(`${__dirname}/success.html`)
         }
         else {
             res.sendFile(`${__dirname}/failure.html`)
         }
-
-        let data = ""
-
-        // A chunk of data has been received.
-        response.on('data', (chunk) => {
-            data += chunk;
-        });
-
-        // The whole response has been received.
-        response.on('end', () => {
-            console.log(JSON.parse(data));
-        });
     })
-
-    // Handle request errors
-    request.on('error', (error) => {
-        console.error(`Error making request: ${error.message}`);
-    });
-
-    // Send the JSON data in the request body
-    request.write(jsonData);
-
-    // End the request
-    request.end();
-
+    
+    request.on('error', (error)=>{
+        console.error(error)
+    })
+    // request.write(jsonData)
+    request.end()
 })
 
-app.post("/failure", function(req, res){
-    res.redirect("/");
+app.post('/failure', (req, res)=>{
+    res.redirect('/')
 })
 
-app.listen(process.env.PORT || 3000 , function(){
-    console.log("Server Started at port 3000");
+app.listen(3000, ()=>{
+    console.log('Server is running on port 3000')
 })
+
+
+//API Key
+// b64390cec8084533d39ce3a5cc860f4d-us21
+
+//List Id
+// f364c63968
