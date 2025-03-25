@@ -59,7 +59,7 @@ app.post('/', (req, res)=>{
     request.on('error', (error)=>{
         console.error(error)
     })
-    // request.write(jsonData)
+    request.write(jsonData)
     request.end()
 })
 
